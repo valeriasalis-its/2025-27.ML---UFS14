@@ -1,6 +1,6 @@
 def func(x):
-    return x + 1
+    return int(x)
 
 
 def test_answer():
-    assert func(3) == 4
+    assert func("si") == 4
