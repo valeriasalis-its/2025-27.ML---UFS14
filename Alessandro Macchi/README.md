@@ -1,4 +1,4 @@
-# Sistema di raccomandazione musicale
+# Sistema di raccomandazione musicalegit reset --soft HEAD~1
 
 ## Analisi del problema e degli obiettivi
 
