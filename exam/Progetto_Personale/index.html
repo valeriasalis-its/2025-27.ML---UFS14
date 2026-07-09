@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Simulatore interattivo di lancio razzi con correzione traiettoria via comunicazione elettromagnetica. Fisica realistica con drag, vento, thrust vectoring e PID controller.">
+    <meta name="keywords" content="razzo, simulatore, traiettoria, fisica, EM, thrust vectoring, PID">
+    <title>Simulatore Lancio Razzi — Correzione Traiettoria EM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Stars background -->
+    <div id="stars-bg" class="stars-bg"></div>
+
+    <!-- Header -->
+    <header id="main-header" class="main-header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M24 4L28 18H38L30 26L34 40L24 32L14 40L18 26L10 18H20L24 4Z" fill="url(#logoGrad)" stroke="rgba(0,255,255,0.6)" stroke-width="1"/>
+                        <defs><linearGradient id="logoGrad" x1="10" y1="4" x2="38" y2="40"><stop stop-color="#00e5ff"/><stop offset="1" stop-color="#7c4dff"/></linearGradient></defs>
+                    </svg>
+                </div>
+                <div>
+                    <h1>Rocket Trajectory Simulator</h1>
+                    <p class="subtitle">Correzione Traiettoria via Comunicazione EM</p>
+                </div>
+            </div>
+            <div class="header-status">
+                <div id="sim-status-badge" class="status-badge idle">
+                    <span class="status-dot"></span>
+                    <span id="sim-status-text">IDLE</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <main id="main-layout" class="main-layout">
+
+        <!-- Left Panel: Input Parameters -->
+        <aside id="input-panel" class="panel input-panel">
+            <div class="panel-header">
+                <h2>⚙ Parametri</h2>
+                <button id="btn-reset-params" class="btn-icon" title="Reset parametri">↺</button>
+            </div>
+
+            <div class="panel-body">
+                <!-- Rocket Parameters -->
+                <section class="param-group">
+                    <h3 class="group-title">
+                        <span class="group-icon">🚀</span> Razzo
+                    </h3>
+                    <div class="input-row">
+                        <label for="input-mass">Massa totale</label>
+                        <div class="input-unit">
+                            <input type="number" id="input-mass" value="50" min="1" max="10000" step="1">
+                            <span class="unit">kg</span>
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <label for="input-fuel-mass">Massa carburante</label>
+                        <div class="input-unit">
+                            <input type="number" id="input-fuel-mass" value="20" min="0.1" max="9000" step="0.1">
+                            <span class="unit">kg</span>
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <label for="input-thrust">Spinta (Thrust)</label>
+                        <div class="input-unit">
+                            <input type="number" id="input-thrust" value="2000" min="1" max="100000" step="10">
+                            <span class="unit">N</span>
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <label for="input-burn-time">Tempo combustione</label>
+                        <div class="input-unit">
+                            <input type="number" id="input-burn-time" value="10" min="0.1" max="300" step="0.1">
+                            <span class="unit">s</span>
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <label for="input-launch-angle">Angolo di lancio</label>
+                        <div class="input-unit">
+                            <input type="number" id="input-launch-angle" value="85" min="0" max="90" step="0.5">
+                            <span class="unit">°</span>
+                        </div>
+                    </div>
+                    <div class="input-row toggle-row">
+                        <label for="input-parachute-enabled">Attiva paracadute</label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="input-parachute-enabled" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </section>
+
+                <!-- Geometry -->
+                <section class="param-group">
+                    <h3 class="group-title">
+                        <span class="group-icon">📐</span> Geometria
+                    </h3>
+                    <div class="input-row">
+                        <label for="input-diameter">Diametro</label>
+                        <div class="input-unit">
+                            <input type="number" id="input-diameter" value="0.15" min="0.01" max="10" step="0.01">
+                            <span class="unit">m</span>
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <label for="input-length">Lunghezza</label>
+                        <div class="input-unit">
+                            <input type="number" id="input-length" value="2" min="0.1" max="50" step="0.1">
+                            <span class="unit">m</span>
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <label for="input-cone-angle">Angolo cono</label>
+                        <div class="input-unit">
+                            <input type="number" id="input-cone-angle" value="15" min="1" max="45" step="1">
+                            <span class="unit">°</span>
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <label for="input-cd">Coefficiente Cd</label>
+                        <div class="input-unit">
+                            <input type="number" id="input-cd" value="0.5" min="0.05" max="2" step="0.01">
+                            <span class="unit">—</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Wind -->
+                <section class="param-group">
+                    <h3 class="group-title">
+                        <span class="group-icon">💨</span> Vento
+                    </h3>
+                    <div class="input-row">
+                        <label for="input-wind-speed">Velocità vento</label>
+                        <div class="input-unit">
+                            <input type="number" id="input-wind-speed" value="5" min="0" max="100" step="0.5">
+                            <span class="unit">m/s</span>
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <label for="input-wind-var">Variabilità</label>
+                        <div class="input-unit">
+                            <input type="number" id="input-wind-var" value="30" min="0" max="100" step="1">
+                            <span class="unit">%</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Correction System -->
+                <section class="param-group">
+                    <h3 class="group-title">
+                        <span class="group-icon">📡</span> Correzione EM
+                    </h3>
+                    <div class="input-row toggle-row">
+                        <label for="input-correction-enabled">Attiva correzione</label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="input-correction-enabled" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="input-row">
+                        <label for="input-pid-kp">PID Kp</label>
+                        <div class="input-unit">
+                            <input type="number" id="input-pid-kp" value="2.0" min="0" max="50" step="0.1">
+                            <span class="unit">—</span>
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <label for="input-pid-ki">PID Ki</label>
+                        <div class="input-unit">
+                            <input type="number" id="input-pid-ki" value="0.1" min="0" max="10" step="0.01">
+                            <span class="unit">—</span>
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <label for="input-pid-kd">PID Kd</label>
+                        <div class="input-unit">
+                            <input type="number" id="input-pid-kd" value="1.5" min="0" max="50" step="0.1">
+                            <span class="unit">—</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Simulation Speed -->
+                <section class="param-group">
+                    <h3 class="group-title">
+                        <span class="group-icon">⏱</span> Simulazione
+                    </h3>
+                    <div class="input-row">
+                        <label for="input-time-scale">Velocità sim.</label>
+                        <div class="input-unit">
+                            <input type="range" id="input-time-scale" min="0.25" max="10" step="0.25" value="1">
+                            <span class="unit" id="time-scale-label">1×</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Launch Button -->
+            <div class="launch-section">
+                <button id="btn-launch" class="btn-launch">
+                    <span class="launch-icon">🔥</span>
+                    <span class="launch-text">LANCIA</span>
+                </button>
+                <div class="launch-sub-buttons">
+                    <button id="btn-predict" class="btn-secondary">🔮 Predict</button>
+                    <button id="btn-pause" class="btn-secondary" disabled>⏸ Pausa</button>
+                    <button id="btn-stop" class="btn-secondary" disabled>⏹ Stop</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Center: Simulation Canvas -->
+        <section id="canvas-section" class="canvas-section">
+            <canvas id="sim-canvas"></canvas>
+            <div id="canvas-overlay" class="canvas-overlay">
+                <div class="overlay-info">
+                    <span id="overlay-altitude">ALT: 0 m</span>
+                    <span id="overlay-velocity">VEL: 0 m/s</span>
+                    <span id="overlay-time">T+ 0.0 s</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Panel: Telemetry Dashboard -->
+        <aside id="telemetry-panel" class="panel telemetry-panel">
+            <div class="panel-header">
+                <h2>📊 Telemetria</h2>
+            </div>
+
+            <div class="panel-body">
+                <!-- Primary Metrics -->
+                <section class="telemetry-grid">
+                    <div class="telem-card" id="telem-altitude">
+                        <div class="telem-label">Altitudine</div>
+                        <div class="telem-value"><span id="val-altitude">0</span></div>
+                        <div class="telem-unit">m</div>
+                    </div>
+                    <div class="telem-card" id="telem-velocity">
+                        <div class="telem-label">Velocità</div>
+                        <div class="telem-value"><span id="val-velocity">0</span></div>
+                        <div class="telem-unit">m/s</div>
+                    </div>
+                    <div class="telem-card" id="telem-accel">
+                        <div class="telem-label">Accelerazione</div>
+                        <div class="telem-value"><span id="val-accel">0</span></div>
+                        <div class="telem-unit">m/s²</div>
+                    </div>
+                    <div class="telem-card" id="telem-angle">
+                        <div class="telem-label">Angolo</div>
+                        <div class="telem-value"><span id="val-angle">0</span></div>
+                        <div class="telem-unit">°</div>
+                    </div>
+                    <div class="telem-card" id="telem-mach">
+                        <div class="telem-label">Mach</div>
+                        <div class="telem-value"><span id="val-mach">0</span></div>
+                        <div class="telem-unit">—</div>
+                    </div>
+                    <div class="telem-card" id="telem-mass">
+                        <div class="telem-label">Massa</div>
+                        <div class="telem-value"><span id="val-mass">0</span></div>
+                        <div class="telem-unit">kg</div>
+                    </div>
+                </section>
+
+                <!-- Deviation -->
+                <section class="param-group">
+                    <h3 class="group-title">
+                        <span class="group-icon">🎯</span> Deviazione
+                    </h3>
+                    <div class="deviation-meter">
+                        <div class="deviation-bar-container">
+                            <div id="deviation-bar" class="deviation-bar" style="width:50%"></div>
+                            <div class="deviation-center-line"></div>
+                        </div>
+                        <div class="deviation-values">
+                            <span id="val-deviation">0.0 m</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Communication Status -->
+                <section class="param-group">
+                    <h3 class="group-title">
+                        <span class="group-icon">📡</span> Comunicazione EM
+                    </h3>
+                    <div class="comm-status">
+                        <div class="comm-row">
+                            <span class="comm-label">Stato</span>
+                            <span id="val-comm-status" class="comm-value status-active">ATTIVO</span>
+                        </div>
+                        <div class="comm-row">
+                            <span class="comm-label">Latenza</span>
+                            <span id="val-comm-latency" class="comm-value">0.00 ms</span>
+                        </div>
+                        <div class="comm-row">
+                            <span class="comm-label">Thrust Vec.</span>
+                            <span id="val-thrust-vec" class="comm-value">0.0°</span>
+                        </div>
+                        <div class="comm-row">
+                            <span class="comm-label">Flap Defl.</span>
+                            <span id="val-flap" class="comm-value">0.0°</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Prediction -->
+                <section class="param-group prediction-section">
+                    <h3 class="group-title">
+                        <span class="group-icon">🔮</span> Predizione
+                    </h3>
+                    <p class="prediction-hint">Calcola il punto di arrivo stimato usando i parametri attuali, paracadute incluso.</p>
+                    <div class="prediction-actions">
+                        <button id="btn-predict-panel" class="btn-secondary">Predict</button>
+                    </div>
+                    <div class="prediction-grid">
+                        <div class="prediction-card">
+                            <div class="prediction-label">Arrivo X</div>
+                            <div class="prediction-value"><span id="val-pred-x">--</span> m</div>
+                        </div>
+                        <div class="prediction-card">
+                            <div class="prediction-label">Arrivo Y</div>
+                            <div class="prediction-value"><span id="val-pred-y">--</span> m</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Charts -->
+                <section class="param-group charts-section">
+                    <h3 class="group-title">
+                        <span class="group-icon">📈</span> Grafici
+                    </h3>
+                    <div class="chart-tabs">
+                        <button class="chart-tab active" data-chart="altitude">Alt</button>
+                        <button class="chart-tab" data-chart="velocity">Vel</button>
+                        <button class="chart-tab" data-chart="deviation">Dev</button>
+                        <button class="chart-tab" data-chart="globe">Globo 3D</button>
+                    </div>
+                    <canvas id="chart-canvas" width="300" height="160"></canvas>
+                </section>
+
+                <!-- Flight Log -->
+                <section class="param-group">
+                    <h3 class="group-title">
+                        <span class="group-icon">📋</span> Log
+                    </h3>
+                    <div id="flight-log" class="flight-log">
+                        <div class="log-entry">Sistema pronto per il lancio.</div>
+                    </div>
+                </section>
+            </div>
+        </aside>
+    </main>
+
+    <script src="simulation.js"></script>
+    <script src="renderer.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
