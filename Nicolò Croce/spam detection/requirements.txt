@@ -1,0 +1,4 @@
+pandas>=2.2
+scikit-learn>=1.8
+spacy>=3.8.11
+streamlit>=1.50
